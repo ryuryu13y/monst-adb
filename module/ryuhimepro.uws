@@ -1,0 +1,120 @@
+CLASS
+
+PROCEDURE  CNT回数チェック(deviceID,deviceNAME)
+INIFILE = "ryuhimepro.ini"
+cnt=READINI("quitcmd",deviceNAME,INIFILE)
+
+if CNT < 50
+  WRITEINI("StartNum",deviceNAME,1,INIFILE)//CNTをリセット
+  DOSCMD("nox_adb -s "+deviceID+" reboot")
+
+  cmd=READINI("quitcmd",deviceNAME,INIFILE)
+  DOSCMD(cmd)
+
+  sleep(10)
+
+  cmd=READINI("runcmd",deviceNAME,INIFILE)
+  DOSCMD(cmd)
+endif
+
+
+FEND
+////////////////////////////////////////////
+PROCEDURE   名前ADBIDロード(deviceID,deviceNAME)
+
+INIFILE = "ryuhimepro.ini"
+deviceID=READINI("Config",deviceID,INIFILE)
+deviceNAME=READINI("Config",deviceNAME,INIFILE)
+WRITEINI("Config","edit1",deviceID,INIFILE)
+WRITEINI("Config","edit2",deviceNAME,INIFILE)
+
+FEND
+
+PROCEDURE ファイルロード()
+deviceID=0
+deviceNAME=0
+Imgpass=0
+INIFILE = (".\ryuhimepro.ini")
+FileNum=READINI("Config","ImgPass",INIFILE)
+WRITEINI("Config","edit4",deviceID,INIFILE)
+FEND
+/////////////////////////////////////////
+PROCEDURE　BINパスロード()
+INIFILE = (".\ryuhimepro.ini")
+BinTextPass=READINI("Config","BinTextPass",INIFILE)
+FileNum=READINI("Config","FileNum",INIFILE)
+deviceNAME=READINI("Config","edit2",INIFILE)
+//
+fileID = FOPEN(BinTextPass, F_READ) // 読み込みモードでファイルを開く
+FilePass = FGET(fileID, FileNum) // FileNum行目を変数に読み込む
+FCLOSE(fileID)
+//
+w_id = getid(deviceNAME) //w_id にアクティブウィンドウを格納
+title = STATUS(w_id, ST_TITLE) // タイトルを返す
+x = STATUS(w_id, ST_X) // X座標を返す
+y = STATUS(w_id, ST_Y) // Y座標を返す
+FUKIDASI("現在"+FileNum+"運用中", x, y)
+//
+Filenum = FileNum+1
+WRITEINI("Config","FileNum",FileNum,INIFILE)
+WRITEINI("Config","edit3",FilePass,INIFILE)
+FEND
+/////////////////////////////////////////////
+PROCEDURE データ入れ替え(deviceID,FilePass)
+DOSCMD("nox_adb -s "+deviceID+" shell am force-stop jp.co.mixi.monsterstrike")
+DOSCMD("nox_adb -s "+deviceID+" sleep 1")
+DOSCMD("nox_adb -s "+deviceID+" push "+FilePass+" /data/data/jp.co.mixi.monsterstrike/data10.bin")
+DOSCMD("nox_adb -s "+deviceID+" shell am start -n jp.co.mixi.monsterstrike/.MonsterStrike")
+FEND
+
+/////////////////////////////////////////////
+
+PROCEDURE モンスト初期化起動(deviceID)
+DOSCMD("nox_adb -s "+deviceID+" shell am force-stop jp.co.mixi.monsterstrike")
+DOSCMD("nox_adb -s "+deviceID+" sleep 1")
+DOSCMD("nox_adb -s "+deviceID+" shell rm //data/data/jp.co.mixi.monsterstrike/data10.bin")
+DOSCMD("nox_adb -s "+deviceID+" shell rm //data/data/jp.co.mixi.monsterstrike/data11.bin")
+DOSCMD("nox_adb -s "+deviceID+" shell rm //data/data/jp.co.mixi.monsterstrike/data13.bin")
+DOSCMD("nox_adb -s "+deviceID+" shell rm //data/data/jp.co.mixi.monsterstrike/data16.bin")
+DOSCMD("nox_adb -s "+deviceID+" shell am start -n jp.co.mixi.monsterstrike/.MonsterStrike")
+FEND
+
+/////////////////////////////////////////
+PROCEDURE swipe(swipeX,swipeY,deviceID)
+DOSCMD("nox_adb -s "+deviceID+" shell input swipe "+swipeX+" " +swipeY+" "+swipeX+" "+swipeY+" 100")
+FEND
+/////////////////////////////////////////
+PROCEDURE swipe2(swipe1X,swipe1Y,swipe2X,swipe2Y,deviceID)
+DOSCMD("nox_adb -s "+deviceID+" shell input swipe "+swipe1X+" " +swipe1Y+" "+swipe2X+" "+swipe2Y+" 100")
+FEND
+/////////////////////////////////////////
+PROCEDURE IMGswipe(swipeX,swipeY,deviceID,deviceNAME,IMGPASS)
+w_id = getid( deviceNAME ) //w_id にアクティブウィンドウを格納
+mouseorg( w_id ,2 ,MORG_BACK ) //以下の操作をGET_ACTIVE_WINで掴んだIDにダイレクトで送る
+if chkimg(IMGPASS)
+DOSCMD("nox_adb -s "+deviceID+" shell input swipe "+swipeX+" " +swipeY+" "+swipeX+" "+swipeY+" 100")
+sleep(0.1)
+endif
+FEND
+/////////////////////////////////////////
+PROCEDURE IMGswipe2(swipe1X,swipe1Y,swipe2X,swipe2Y,deviceID,IMGPASS)
+if chkimg(IMGPASS)
+DOSCMD("nox_adb -s "+deviceID+" shell input swipe "+swipe1X+" " +swipe1Y+" "+swipe2X+" "+swipe2Y+" 100")
+endif
+FEND
+/////////////////////////////////////////
+PROCEDURE chkimg2(IMGPASS,deviceID,deviceNAME)
+w_id = getid( deviceNAME ) //w_id にアクティブウィンドウを格納
+mouseorg( w_id ,2 ,MORG_BACK ) //以下の操作をGET_ACTIVE_WINで掴んだIDにダイレクトで送る
+if chkimg(IMGPASS)
+DOSCMD("nox_adb -s "+deviceID+" shell input swipe "+G_IMG_X+" "+G_IMG_Y+" "+G_IMG_X+" "+G_IMG_Y+" 100")
+print (IMGPASS+deviceNAME)
+endif
+FEND
+/////////////////////////////////////////
+/////////////////////////////////////////
+/////////////////////////////////////////
+
+/////////////////////////////////////////
+ENDCLASS
+/////////////////////////////////////////
